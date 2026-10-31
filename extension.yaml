@@ -1,0 +1,158 @@
+manifest_version: 2
+lifecycle:
+  data_schema_version: 1
+  data_migrations: []
+extension_id: flowsteward.google-cloud-vertex
+kind: tool_provider
+version: 0.1.0
+release_stage: placeholder
+display_name: Google Cloud Vertex Gemini
+description: Connect Gemini models hosted by Vertex AI to Flow Steward.
+vendor:
+  name: Flow Steward
+  support_url: https://cloud.google.com/vertex-ai/docs
+listing:
+  category: ai
+  tags:
+  - llm
+  - google-cloud
+  - vertex-ai
+  summary: Connect an account-scoped Google Cloud project and discover Gemini models.
+features:
+- tool
+- llm_provider
+required_scopes:
+- extension:invoke
+machine_auth:
+  service_account_key: svc_ext_vertex
+  required_scopes:
+  - extension:invoke
+account_scope:
+  scope_type: account
+  description: Vertex project, location, and credentials belong to this Flow Steward
+    account.
+entrypoint:
+  mode: subprocess
+  command:
+  - python3
+  - main.py
+  timeout_seconds: 120
+health:
+  command:
+  - python3
+  - health.py
+  timeout_seconds: 5
+ui_manifest: ui/ui_manifest.yaml
+python_requirements:
+- name: attrs
+  version: 26.1.0
+  hashes:
+  - sha256:c647aa4a12dfbad9333ca4e71fe62ddc36f4e63b2d260a37a8b83d2f043ac309
+- name: certifi
+  version: 2026.10.23
+  hashes:
+  - sha256:e9b54de76e530bb6cf0ccd036787103acb58fd42ba930ea8bf948ddbaa2f61d1
+- name: cffi
+  version: 2.1.1
+  hashes:
+  - sha256:68e62fe11f30d5ca8289242866f0a5291402d8529ca2178ab8afc5c9694ae890
+  - sha256:c1453022f490d2459a11819d83ad1d586e9ff65a12ac3e705ffebd46d3685dcf
+- name: charset-normalizer
+  version: 3.5.2
+  hashes:
+  - sha256:3d31298449090ab8d47b7b1b2a555ff73cac7ed438a08b7ac160980c7ebed649
+  - sha256:b91363207bd9dc966a691e959bb47f64b30f7ac4b072be9968b366982f7db77c
+- name: cryptography
+  version: 50.0.2
+  hashes:
+  - sha256:630ebfea3bf689d075f82316324ff7433dc447fe6bc1bfc76524b74b4a9567d2
+  - sha256:79def8d059362e7831389ed3be0ecdf58a89386e1271e35dd9f5af84e81bffd0
+- name: google-auth
+  version: 2.49.2
+  hashes:
+  - sha256:c2720924dfc82dedb962c9f52cabb2ab16714fd0a6a707e40561d217574ed6d5
+- name: idna
+  version: '3.20'
+  hashes:
+  - sha256:ab7ae7122974553370f0bdb919e1a960b2cd1bc1ef0276416d896db81c14582c
+- name: jsonschema
+  version: 4.26.0
+  hashes:
+  - sha256:d489f15263b8d200f8387e64b4c3a75f06629559fb73deb8fdfb525f2dab50ce
+- name: jsonschema-specifications
+  version: 2025.9.1
+  hashes:
+  - sha256:98802fee3a11ee76ecaca44429fda8a41bff98b00a0f2838151b113f210cc6fe
+- name: pyasn1
+  version: 0.6.5
+  hashes:
+  - sha256:4017b0fce125096b8573b39c989fdb1a4b19cf761e683398184550fea0e66587
+- name: pyasn1-modules
+  version: 0.4.2
+  hashes:
+  - sha256:29253a9207ce32b64c3ac6600edc75368f98473906e8fd1043bd6b5b1de2c14a
+- name: pycparser
+  version: '3.12'
+  hashes:
+  - sha256:a076f3f489b39b43ed13563a1dafe42447445bec2e294154ec5c57fcdda4c85e
+- name: referencing
+  version: 0.37.0
+  hashes:
+  - sha256:381329a9f99628c9069361716891d34ad94af76e461dcb0335825aecc7692231
+- name: requests
+  version: 2.34.2
+  hashes:
+  - sha256:2a0d60c172f83ac6ab31e4554906c0f3b3588d37b5cb939b1c061f4907e278e0
+- name: rpds-py
+  version: 2026.9.1
+  hashes:
+  - sha256:2693b2728bbcc48d09a981a356954b0c47c53ff25b545856f28a889ea619f69a
+  - sha256:addeda51556dac7c1a2f14cda62db8b621cd12afba3091d03a96c72932387eab
+- name: typing-extensions
+  version: 4.16.0
+  hashes:
+  - sha256:481caa481374e813c1b176ada14e97f1f67a4539ce9cfeb3f350d78d6370c2e8
+- name: urllib3
+  version: 2.8.0
+  hashes:
+  - sha256:0cf3cae568d36aa9576b28dfb35f11328f1cb974ca7647d9475ebb86c75ac6e3
+runtime:
+  contract_version: extension_host_v2
+  compatibility:
+    platform_min: 1.4.0
+  extension_contract_v2:
+    llm_provider:
+      schema_version: llm_provider_extension_v1
+      supplier_key: google_cloud_vertex
+      supplier_label: Google Cloud Vertex
+      runtime_mode: subprocess
+      credential_provider_key: google_cloud_vertex
+      required_provider_secrets:
+      - service_account_json
+      required_connection_config:
+      - project_id
+      - location
+      connection_config_help:
+        project_id: The Google Cloud project ID where Vertex AI is enabled and billed.
+        location: A supported Vertex location such as us-central1 or global; availability
+          varies by model.
+      provider_secret_help:
+        service_account_json: Paste the full JSON key for a dedicated Google Cloud
+          service account with Vertex AI access. Store it securely and rotate it according
+          to your policy.
+      operations:
+        list_models:
+          query_id: llm.list_models
+        chat:
+          action_id: llm.chat
+        structured_chat:
+          action_id: llm.chat_structured
+          optional: true
+      model_grouping:
+        strategy: upstream_owner
+        owner_key_field: upstream_owner_key
+        owner_label_field: upstream_owner_label
+      required_capabilities_for_enablement:
+      - chat
+      - tools
+      - structured_output

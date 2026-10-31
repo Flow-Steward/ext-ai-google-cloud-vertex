@@ -1,0 +1,4 @@
+page_id: provider
+title: Google Cloud Vertex Gemini
+description: Enable Vertex AI and billing in your Google Cloud project. Create a dedicated service account with Vertex AI access and a JSON key. Enter the project ID, location and key in the LLM provider panel, save, discover models, and add models after capability verification. The discovered list is advisory; availability in your project and location, quotas and Google Cloud charges apply. Gemini Developer API keys are not supported.
+components: []
