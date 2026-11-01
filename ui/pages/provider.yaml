@@ -1,4 +1,5 @@
 page_id: provider
 title: Google Cloud Vertex Gemini
-description: Enable Vertex AI and billing in your Google Cloud project. Create a dedicated service account with Vertex AI access and a JSON key. Enter the project ID, location and key in the LLM provider panel, save, discover models, and add models after capability verification. The discovered list is advisory; availability in your project and location, quotas and Google Cloud charges apply. Gemini Developer API keys are not supported.
+description: >-
+  In Google Cloud Console, select a project with billing enabled, then enable the Vertex AI API at https://console.cloud.google.com/apis/library/aiplatform.googleapis.com. At https://console.cloud.google.com/iam-admin/serviceaccounts create a dedicated service account, grant it Vertex AI User (roles/aiplatform.user) on the project, and create a JSON key from its Keys tab. Your organization must permit service-account key creation. In Flow Steward’s LLM provider panel, enter the Google Cloud project ID, a supported Vertex location such as us-central1 or global, and the full JSON key; save, discover models, verify their capabilities, and add the models you need. Discovery is advisory: model access, location, quota and Google Cloud charges still apply. A Gemini Developer API key is not supported.
 components: []

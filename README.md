@@ -1,12 +1,14 @@
-# Google Cloud Vertex Gemini provider (in development)
+# Google Cloud Vertex Gemini provider
 
-This extension is intended to connect an account-scoped Google Cloud project and Vertex AI location to Flow Steward. It depends on the proposed Core 1.4.0 LLM provider contract for separate plaintext `project_id` and `location` settings. It is not ready to install or use.
+Connect an account-scoped Google Cloud project and Vertex AI location to a Flow Steward installation supporting extension runtime contract 1.4.0 or newer; the installer checks compatibility. This integration has not been verified with a live Google Cloud account.
 
-## Intended connection
+## Connect
 
-Enable the Vertex AI API and billing for the project, grant a dedicated service account the permissions needed to use the selected models, and provide its service-account JSON as the account's encrypted provider credential. Choose a project ID and a supported Vertex location (including `global` where appropriate). Google Cloud IAM, organization policy, model availability, quotas, and charges apply. Do not use a Gemini Developer API key; that is a separate provider.
+1. Select a Google Cloud project with billing enabled and [enable the Vertex AI API](https://console.cloud.google.com/apis/library/aiplatform.googleapis.com).
+2. In [Service Accounts](https://console.cloud.google.com/iam-admin/serviceaccounts), create a dedicated service account and grant it Vertex AI User (`roles/aiplatform.user`) on the project. Under its Keys tab, create a JSON key; your organization must allow service-account key creation.
+3. In Flow Steward’s LLM provider panel, enter the Google Cloud project ID, a supported Vertex location such as `us-central1` or `global`, and the full service-account JSON key. Save the provider, discover models, verify their capabilities, and add the models you need. Gemini Developer API keys are not supported.
 
-The runtime must construct refreshable credentials explicitly from that account's secret, never from application-default or ambient credentials. Model discovery lists Google Model Garden publisher metadata, a global superset rather than an entitlement or location-specific inventory. A missing or empty publisher response fails discovery to preserve the last catalog. Flow Steward’s existing capability verifier must approve each model before use. Tool-call thought signatures must be preserved with their function calls during replay. The provider does not implement media generation or realtime interactions.
+Google Cloud IAM, organization policy, model availability, quotas and charges apply. Discovery lists Google Model Garden publisher metadata, a global superset rather than an entitlement or location-specific inventory; a missing or empty response fails discovery to preserve the last catalog. Flow Steward’s capability verifier must approve each model before use. The provider uses the account's explicit credentials, preserves tool-call thought signatures during replay, and does not implement media generation or realtime interactions.
 
 ## References
 

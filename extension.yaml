@@ -5,7 +5,7 @@ lifecycle:
 extension_id: flowsteward.google-cloud-vertex
 kind: tool_provider
 version: 0.1.0
-release_stage: placeholder
+release_stage: active
 display_name: Google Cloud Vertex Gemini
 description: Connect Gemini models hosted by Vertex AI to Flow Steward.
 vendor:
@@ -21,6 +21,9 @@ listing:
 features:
 - tool
 - llm_provider
+egress:
+  hosts:
+  - "*.googleapis.com"
 required_scopes:
 - extension:invoke
 machine_auth:
@@ -132,10 +135,24 @@ runtime:
       required_connection_config:
       - project_id
       - location
+      connection_config_schema:
+        project_id:
+          type: string
+          title: Google Cloud project
+          minLength: 6
+          maxLength: 30
+        location:
+          type: string
+          title: Vertex AI location
+          minLength: 1
+          maxLength: 63
       connection_config_help:
-        project_id: The Google Cloud project ID where Vertex AI is enabled and billed.
+        project_id: The billed Google Cloud project ID (6-30 characters) or project
+          number (6-20 digits) where Vertex AI is enabled.
         location: A supported Vertex location such as us-central1 or global; availability
           varies by model.
+      provider_secret_formats:
+        service_account_json: json_object
       provider_secret_help:
         service_account_json: Paste the full JSON key for a dedicated Google Cloud
           service account with Vertex AI access. Store it securely and rotate it according
