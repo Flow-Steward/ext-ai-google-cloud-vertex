@@ -10,7 +10,8 @@ display_name: Google Cloud Vertex Gemini
 description: Connect Gemini models hosted by Vertex AI to Flow Steward.
 vendor:
   name: Flow Steward
-  support_url: https://cloud.google.com/vertex-ai/docs
+  support_url: https://github.com/Flow-Steward/ext-ai-google-cloud-vertex/issues
+  website_url: https://github.com/Flow-Steward/ext-ai-google-cloud-vertex
 listing:
   category: ai
   tags:

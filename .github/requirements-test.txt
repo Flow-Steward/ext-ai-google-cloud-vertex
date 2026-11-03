@@ -1,0 +1,18 @@
+# Installed by CI for the tests; the runtime installs python_requirements itself.
+attrs==26.1.0
+certifi==2026.10.23
+cffi==2.1.1
+charset-normalizer==3.5.2
+cryptography==50.0.2
+google-auth==2.49.2
+idna==3.20
+jsonschema==4.26.0
+jsonschema-specifications==2025.9.1
+pyasn1==0.6.5
+pyasn1-modules==0.4.2
+pycparser==3.12
+referencing==0.37.0
+requests==2.34.2
+rpds-py==2026.9.1
+typing-extensions==4.16.0
+urllib3==2.8.0
