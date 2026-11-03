@@ -1,0 +1,27 @@
+{
+  "provider": "vertex",
+  "retrieved_date": "2026-11-03",
+  "official_guidelines_url": "https://cloud.google.com/icons",
+  "download_url": "https://services.google.com/fh/files/misc/core-products-icons.zip",
+  "archive_file": "/private/tmp/fs-ai-logo-assets/vertex/core-products-icons.zip",
+  "archive_sha256": "6531a10f58bc599c24d9a455d81dd757c1a03c3c43da9cddf639b859c1c1eece",
+  "archive_member": "Unique Icons/Vertex AI/PNG/VertexAI-512-color.png",
+  "source_file": "/private/tmp/fs-ai-logo-assets/vertex/VertexAI-512-color.png",
+  "source_sha256": "5a07416695e22b326514c35761050d20323d6b66e8bf715d09b7cd54ad736fa2",
+  "output_file": "/private/tmp/fs-ai-logo-assets/vertex/icon.png",
+  "output_sha256": "5a07416695e22b326514c35761050d20323d6b66e8bf715d09b7cd54ad736fa2",
+  "output_bytes": 8741,
+  "output_dimensions": [
+    512,
+    512
+  ],
+  "conversion_details": [
+    "Official 512x512 PNG extracted and copied byte-for-byte to icon.png. No conversion or artwork changes; original canvas, clearspace, colors, proportions and transparency retained."
+  ],
+  "trademark_notice_suggestion": "Google Cloud and Vertex AI are trademarks of Google LLC. This independent Flow Steward integration is not affiliated with, endorsed by, or sponsored by Google.",
+  "usage_notes": [
+    "Official core-products archive linked directly from Google Cloud icons page; selected Vertex AI asset by exact product folder.",
+    "No legal acceptance UI was encountered or accepted."
+  ],
+  "visual_inspection": "Source and final PNG inspected with view_image; final artwork centered and unclipped with official clearspace."
+}

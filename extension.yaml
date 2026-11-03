@@ -4,7 +4,7 @@ lifecycle:
   data_migrations: []
 extension_id: flowsteward.google-cloud-vertex
 kind: tool_provider
-version: 0.1.0
+version: 0.1.1
 release_stage: active
 display_name: Google Cloud Vertex Gemini
 description: Connect Gemini models hosted by Vertex AI to Flow Steward.
