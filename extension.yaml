@@ -4,7 +4,7 @@ lifecycle:
   data_migrations: []
 extension_id: flowsteward.google-cloud-vertex
 kind: tool_provider
-version: 0.1.3
+version: 0.1.4
 release_stage: active
 display_name: Google Cloud Vertex Gemini
 description: Connect Gemini models hosted by Vertex AI to Flow Steward.
@@ -72,9 +72,9 @@ python_requirements:
   - sha256:630ebfea3bf689d075f82316324ff7433dc447fe6bc1bfc76524b74b4a9567d2
   - sha256:79def8d059362e7831389ed3be0ecdf58a89386e1271e35dd9f5af84e81bffd0
 - name: google-auth
-  version: "2.62.1"
+  version: "2.62.2"
   hashes:
-  - sha256:015399a5abde39033c69404cc1c079e6d4c2de2993e164c9f4eac6e5376ad72b
+  - sha256:e9bcdb0679b6a4369ac327c5c59f06d92f7b4cd2624e7100294c14632f55a36b
 - name: idna
   version: '3.20'
   hashes:

@@ -22,9 +22,9 @@ cryptography 50.0.2
   cryptography-50.0.2.dist-info/licenses/LICENSE
   cryptography-50.0.2.dist-info/licenses/LICENSE.APACHE
   cryptography-50.0.2.dist-info/licenses/LICENSE.BSD
-google-auth 2.62.1
+google-auth 2.62.2
   License: Apache 2.0
-  google_auth-2.62.1.dist-info/licenses/LICENSE
+  google_auth-2.62.2.dist-info/licenses/LICENSE
 idna 3.20
   License: BSD-3-Clause
   idna-3.20.dist-info/licenses/LICENSE.md

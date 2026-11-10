@@ -1,2 +1,2 @@
-google-auth[requests]==2.62.1
+google-auth[requests]==2.62.2
 jsonschema==4.26.0
