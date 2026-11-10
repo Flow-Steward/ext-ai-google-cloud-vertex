@@ -37,6 +37,10 @@ def connection(request: dict[str, Any]) -> tuple[str, str, Any]:
         credentials = service_account.Credentials.from_service_account_info(
             info, scopes=["https://www.googleapis.com/auth/cloud-platform"]
         )
+        # Invocation-owned Sessions cannot be shared with SDK background workers.
+        # google-auth preserves this blocking-lookup contract for gcloud: keep RAB
+        # discovery enabled, but finish its one fail-fast attempt before disposal.
+        credentials._set_blocking_regional_access_boundary_lookup()
     except Exception as exc:
         raise RuntimeError("authentication_error") from exc
     return project, location, credentials
@@ -303,7 +307,8 @@ def request_json(
         auth_request = Request(session=session)
 
         def bounded_auth_request(*args: Any, **kwargs: Any) -> Any:
-            kwargs["timeout"] = 20
+            timeout = kwargs.get("timeout")
+            kwargs["timeout"] = min(timeout, 20) if timeout is not None else 20
             return auth_request(*args, **kwargs)
 
         headers = {"Content-Type": "application/json"}

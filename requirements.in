@@ -1,3 +1,2 @@
-# google-auth 2.55+ starts background IAM lookups beyond the invocation Session.
-google-auth[requests]==2.54.0
+google-auth[requests]==2.62.1
 jsonschema==4.26.0

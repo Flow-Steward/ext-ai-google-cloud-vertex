@@ -1,0 +1,61 @@
+Third-party Python distributions
+================================
+
+The runtime wheels below are redistributed unmodified. Their original license
+and notice texts are included inside each wheel under its .dist-info directory.
+The host supplies flowsteward-extension-sdk separately; dev-wheels is not shipped.
+
+attrs 26.1.0
+  License: MIT
+  attrs-26.1.0.dist-info/licenses/LICENSE
+certifi 2026.10.23
+  License: MPL-2.0
+  certifi-2026.10.23.dist-info/licenses/LICENSE
+cffi 2.1.1
+  License: MIT-0
+  cffi-2.1.1.dist-info/licenses/LICENSE
+charset-normalizer 3.5.2
+  License: MIT
+  charset_normalizer-3.5.2.dist-info/licenses/LICENSE
+cryptography 50.0.2
+  License: Apache-2.0 OR BSD-3-Clause
+  cryptography-50.0.2.dist-info/licenses/LICENSE
+  cryptography-50.0.2.dist-info/licenses/LICENSE.APACHE
+  cryptography-50.0.2.dist-info/licenses/LICENSE.BSD
+google-auth 2.62.1
+  License: Apache 2.0
+  google_auth-2.62.1.dist-info/licenses/LICENSE
+idna 3.20
+  License: BSD-3-Clause
+  idna-3.20.dist-info/licenses/LICENSE.md
+jsonschema 4.26.0
+  License: MIT
+  jsonschema-4.26.0.dist-info/licenses/COPYING
+jsonschema-specifications 2025.9.1
+  License: MIT
+  jsonschema_specifications-2025.9.1.dist-info/licenses/COPYING
+pyasn1 0.6.5
+  License: BSD-2-Clause
+  pyasn1-0.6.5.dist-info/licenses/LICENSE.rst
+pyasn1_modules 0.4.2
+  License: BSD
+  pyasn1_modules-0.4.2.dist-info/licenses/LICENSE.txt
+pycparser 3.12
+  License: BSD-3-Clause
+  pycparser-3.12.dist-info/licenses/LICENSE
+referencing 0.37.0
+  License: MIT
+  referencing-0.37.0.dist-info/licenses/COPYING
+requests 2.34.2
+  License: Apache-2.0
+  requests-2.34.2.dist-info/licenses/LICENSE
+  requests-2.34.2.dist-info/licenses/NOTICE
+rpds-py 2026.9.1
+  License: MIT
+  rpds_py-2026.9.1.dist-info/licenses/LICENSE
+typing_extensions 4.16.0
+  License: PSF-2.0
+  typing_extensions-4.16.0.dist-info/licenses/LICENSE
+urllib3 2.8.0
+  License: MIT
+  urllib3-2.8.0.dist-info/licenses/LICENSE.txt
