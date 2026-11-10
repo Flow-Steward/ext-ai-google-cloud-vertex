@@ -4,7 +4,7 @@ certifi==2026.10.23
 cffi==2.1.1
 charset-normalizer==3.5.2
 cryptography==50.0.2
-google-auth==2.49.2
+google-auth==2.54.0
 idna==3.20
 jsonschema==4.26.0
 jsonschema-specifications==2025.9.1
