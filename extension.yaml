@@ -4,10 +4,15 @@ lifecycle:
   data_migrations: []
 extension_id: flowsteward.google-cloud-vertex
 kind: tool_provider
-version: 0.1.4
+version: 0.1.5
 release_stage: active
 display_name: Google Cloud Vertex Gemini
-description: Connect Gemini models hosted by Vertex AI to Flow Steward.
+description: |-
+  Run Flow Steward agents with Gemini models served through your Google Cloud project using Google Cloud Vertex Gemini. Configure a Google Cloud project, location and service-account credentials, discover Gemini model metadata, then add models that pass Flow Steward's capability verification. Enabled models can supply the language-model responses used by your agents.
+
+  The provider implements text conversations, function calling with tool-result replay, and JSON Schema-guided structured responses through Vertex AI's generateContent API. Responses include the assistant message and token-usage information, with a provider request identifier when available. This makes the integration suitable for agents that reason over text, call workflow tools and return structured results while using a Google Cloud project for access and billing.
+
+  Discovery reads Google's publisher catalog. A listed model may still be unavailable in your location or to your project, so discovery does not establish entitlement. IAM permissions, organization policy, quotas and model access remain Google Cloud settings. This release does not provide image or audio generation, realtime interaction, or Gemini Developer API-key authentication.
 vendor:
   name: Flow Steward
   support_url: https://github.com/Flow-Steward/ext-ai-google-cloud-vertex/issues
@@ -18,7 +23,11 @@ listing:
   - llm
   - google-cloud
   - vertex-ai
-  summary: Connect an account-scoped Google Cloud project and discover Gemini models.
+  summary: Use Vertex AI Gemini models for agent conversations, tool calls and structured responses with your Google
+    Cloud credentials.
+  setup_summary: Enable billing and the Vertex AI API in your Google Cloud project, then create a service account
+    with Vertex AI User access and a JSON key. Enter the project ID, supported location and full key in the account-scoped
+    LLM provider panel, then discover and verify models.
 features:
 - tool
 - llm_provider

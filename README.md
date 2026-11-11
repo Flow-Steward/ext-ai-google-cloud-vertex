@@ -1,6 +1,10 @@
 # Google Cloud Vertex Gemini provider
 
-Connect an account-scoped Google Cloud project and Vertex AI location to a Flow Steward installation supporting extension runtime contract 1.4.0 or newer; the installer checks compatibility. This integration has not been verified with a live Google Cloud account.
+Run Flow Steward agents with Gemini models served through your Google Cloud project using Google Cloud Vertex Gemini. Configure a Google Cloud project, location and service-account credentials, discover Gemini model metadata, then add models that pass Flow Steward's capability verification. Enabled models can supply the language-model responses used by your agents.
+
+The provider implements text conversations, function calling with tool-result replay, and JSON Schema-guided structured responses through Vertex AI's generateContent API. Responses include the assistant message and token-usage information, with a provider request identifier when available. This makes the integration suitable for agents that reason over text, call workflow tools and return structured results while using a Google Cloud project for access and billing.
+
+Discovery reads Google's publisher catalog. A listed model may still be unavailable in your location or to your project, so discovery does not establish entitlement. IAM permissions, organization policy, quotas and model access remain Google Cloud settings. This release does not provide image or audio generation, realtime interaction, or Gemini Developer API-key authentication.
 
 ## Connect
 
