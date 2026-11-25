@@ -318,8 +318,89 @@ def build_generate_request(payload: dict[str, Any], *, structured: bool = False)
     return body
 
 
+#: How much of an error answer is read to classify it; the rest is not needed.
+MAX_ERROR_BODY_BYTES = 64 * 1024
+#: Largest successful answer read.
+MAX_ANSWER_BYTES = 5 * 1024 * 1024
+#: Seconds one request to Google may take, unless the caller sets less.
+REQUEST_TIMEOUT_SECONDS = 60
+#: Google's message on a 403 for models a Free trial billing account may not use.
+_PAID_BILLING_MESSAGE = "eligible paid billing account"
+
+
+class VertexHttpError(RuntimeError):
+    """A non-200 answer: ``str()`` is the safe category, ``status`` the HTTP status."""
+
+    def __init__(self, category: str, status: int) -> None:
+        super().__init__(category)
+        self.status = status
+
+
+def _google_error(raw: bytes) -> tuple[set[str], str]:
+    """``error.details[].reason`` values and the lower-cased ``error.message``."""
+    try:
+        error = loads_finite_json(raw).get("error")
+    except (ValueError, AttributeError):
+        return set(), ""
+    if not isinstance(error, dict):
+        return set(), ""
+    details = error.get("details")
+    reasons = {
+        str(detail.get("reason") or "")
+        for detail in (details if isinstance(details, list) else [])
+        if isinstance(detail, dict)
+    }
+    return reasons, str(error.get("message") or "").lower()
+
+
+def _forbidden_category(raw: bytes) -> str:
+    """A 403 is about billing only when Google says so; any other 403 is access."""
+    reasons, message = _google_error(raw)
+    if "BILLING_DISABLED" in reasons or _PAID_BILLING_MESSAGE in message:
+        return "billing_quota_exceeded"
+    return "authentication_error"
+
+
+def classify_error(status: int, raw: bytes, *, bad_request: str = "invalid_response") -> str:
+    """The Flow Steward category for one Google error answer.
+
+    Only ``error.details[].reason`` and ``error.message`` of a 403 are read, to tell
+    billing from access; none of Google's text leaves this module. ``bad_request``
+    is the category of a 400 for this kind of request.
+    """
+    match status:
+        case 400:
+            return bad_request
+        case 401:
+            return "authentication_error"
+        case 403:
+            return _forbidden_category(raw)
+        case 404:
+            return "model_unavailable"
+        case 429:
+            return "rate_limited"
+        case _ if status >= 500:
+            return "upstream_unavailable"
+        case _:
+            return "invalid_response"
+
+
+def _read_bounded(response: Any, limit: int) -> bytes:
+    raw = bytearray()
+    for chunk in response.iter_content(65536):
+        raw.extend(chunk)
+        if len(raw) > limit:
+            break
+    return bytes(raw[:limit])
+
+
 def request_json(
-    url: str, credentials: Any, *, body: dict[str, Any] | None = None
+    url: str,
+    credentials: Any,
+    *,
+    body: dict[str, Any] | None = None,
+    timeout: float = REQUEST_TIMEOUT_SECONDS,
+    bad_request: str = "invalid_response",
 ) -> dict[str, Any]:
     """Make one bounded request; never retry an uncertain paid operation."""
     import requests
@@ -331,9 +412,12 @@ def request_json(
     try:
         auth_request = Request(session=session)
 
+        timeout_seconds = timeout
+
         def bounded_auth_request(*args: Any, **kwargs: Any) -> Any:
             timeout = kwargs.get("timeout")
-            kwargs["timeout"] = min(timeout, 20) if timeout is not None else 20
+            limit = min(20, timeout_seconds)
+            kwargs["timeout"] = min(timeout, limit) if timeout is not None else limit
             return auth_request(*args, **kwargs)
 
         headers = {"Content-Type": "application/json"}
@@ -345,22 +429,20 @@ def request_json(
             url,
             headers=headers,
             json=body,
-            timeout=60,
+            timeout=timeout,
             allow_redirects=False,
             stream=True,
         )
-        if response.status_code in (401, 403):
-            raise RuntimeError("authentication_error")
-        if response.status_code == 429:
-            raise RuntimeError("rate_limited")
-        if response.status_code >= 500:
-            raise RuntimeError("upstream_unavailable")
         if response.status_code != 200:
-            raise RuntimeError("invalid_response")
+            error_body = _read_bounded(response, MAX_ERROR_BODY_BYTES)
+            raise VertexHttpError(
+                classify_error(response.status_code, error_body, bad_request=bad_request),
+                response.status_code,
+            )
         raw = bytearray()
         for chunk in response.iter_content(65536):
             raw.extend(chunk)
-            if len(raw) > 5 * 1024 * 1024:
+            if len(raw) > MAX_ANSWER_BYTES:
                 raise RuntimeError("invalid_response")
         data = loads_finite_json(raw)
         if not isinstance(data, dict):
@@ -391,10 +473,113 @@ def _endpoint(location: str) -> str:
     return f"https://{location}-aiplatform.googleapis.com"
 
 
+#: Name segments of Gemini models that are not chat models (speech, live audio, image,
+#: embeddings, computer use, robotics, transcription, translation). The catalog
+#: (PublisherModel) has no field for modalities or supported methods, so the name is
+#: the only signal; countTokens below cannot tell them apart either (they answer 200).
+NON_CHAT_SEGMENTS = frozenset(
+    {
+        "audio",
+        "banana",
+        "computer",
+        "embedding",
+        "image",
+        "live",
+        "omni",
+        "robotics",
+        "transcribe",
+        "translate",
+        "tts",
+    }
+)
+#: Suffix of catalog entries that describe a model rather than serve one.
+INFO_SUFFIX = "-info"
+_GEMINI_MODEL = re.compile(r"gemini-[a-z0-9.-]+")
+#: Catalog page size Google accepts at most.
+MAX_PAGE_SIZE = 100
+#: countTokens requests in flight at once while Discover checks models.
+PROBE_WORKERS = 8
+#: Seconds one countTokens or catalog request may take.
+PROBE_TIMEOUT_SECONDS = 15
+#: Seconds all countTokens checks of one page may take; models not checked in time are
+#: kept, since a slow answer says nothing about the model. Flow Steward gives the whole
+#: discovery 60 s (llm_provider_extension_service._DISCOVERY_TIME_BUDGET_SECONDS) and
+#: waits for this process to exit (extension_runtime_invocation._wait_for_exit). Checks
+#: already running when the budget ends are not interrupted: the interpreter joins their
+#: threads at exit. Worst case per page: catalog read 15 s + this budget 20 s + one
+#: check still running 15 s = 50 s, inside 60 s.
+PROBE_BUDGET_SECONDS = 20
+#: Answers that mean the project cannot reach the model in this location.
+_DROPPED_STATUSES = frozenset({400, 404})
+#: Answers that are about the project, not the model: Discover stops with them.
+_PROJECT_STATUSES = frozenset({401, 403})
+_PROBE_BODY = {"contents": [{"role": "user", "parts": [{"text": "hi"}]}]}
+
+
+def is_chat_model(model_id: str) -> bool:
+    """Whether a Gemini model id names a chat model, by its name segments."""
+    if not _GEMINI_MODEL.fullmatch(model_id) or model_id.endswith(INFO_SUFFIX):
+        return False
+    return not NON_CHAT_SEGMENTS.intersection(model_id.split("-"))
+
+
+def _model_url(project: str, location: str, model: str, method: str) -> str:
+    return (
+        f"{_endpoint(location)}/v1/projects/{project}/locations/{location}"
+        f"/publishers/google/models/{model}:{method}"
+    )
+
+
+def _reachable(project: str, location: str, model: str, credentials: Any) -> bool:
+    """countTokens (free) for one model: False when Google says the project cannot use it.
+
+    A failure about the project (401, 403) is raised; a rate limit, server error or
+    timeout keeps the model, since it says nothing about the model.
+    """
+    try:
+        request_json(
+            _model_url(project, location, model, "countTokens"),
+            credentials,
+            body=_PROBE_BODY,
+            timeout=PROBE_TIMEOUT_SECONDS,
+        )
+    except VertexHttpError as exc:
+        if exc.status in _DROPPED_STATUSES:
+            return False
+        if exc.status in _PROJECT_STATUSES:
+            raise
+        return True
+    except RuntimeError:
+        return True
+    return True
+
+
+def reachable_models(project: str, location: str, models: list[str], credentials: Any) -> list[str]:
+    """The models of ``models`` this project can call in ``location``, in order."""
+    import concurrent.futures
+
+    if not models:
+        return []
+    pool = concurrent.futures.ThreadPoolExecutor(max_workers=PROBE_WORKERS)
+    try:
+        futures = {
+            pool.submit(_reachable, project, location, model, credentials): model
+            for model in models
+        }
+        done, _ = concurrent.futures.wait(futures, timeout=PROBE_BUDGET_SECONDS)
+        dropped = set()
+        for future in done:
+            if not future.result():
+                dropped.add(futures[future])
+        return [model for model in models if model not in dropped]
+    finally:
+        pool.shutdown(wait=False, cancel_futures=True)
+
+
 def list_models(request: dict[str, Any]) -> dict[str, Any]:
     from urllib.parse import urlencode
 
-    _, _, credentials = connection(request)
+    project, location, credentials = connection(request)
     query = request.get("query") or {}
     cursor = str(query.get("cursor") or "")
     previously_seen = False
@@ -405,46 +590,48 @@ def list_models(request: dict[str, Any]) -> dict[str, Any]:
             raise RuntimeError("invalid_response")
         previously_seen = marker == "1"
     try:
-        limit = min(max(int(query.get("limit") or 100), 1), 100)
+        limit = min(max(int(query.get("limit") or MAX_PAGE_SIZE), 1), MAX_PAGE_SIZE)
     except (ValueError, TypeError) as exc:
         raise RuntimeError("invalid_response") from exc
     params: dict[str, str | int] = {"pageSize": limit}
     if upstream_cursor:
         params["pageToken"] = upstream_cursor
+    # The publishers catalog is global; us-central1 serves it for every location.
     url = (
         "https://us-central1-aiplatform.googleapis.com/v1beta1/publishers/google/models?"
         + urlencode(params)
     )
-    response = request_json(url, credentials)
+    response = request_json(url, credentials, timeout=PROBE_TIMEOUT_SECONDS)
     items = response.get("publisherModels")
     if not isinstance(items, list) or not items:
         raise RuntimeError("invalid_response")
-    models = []
+    prefix = "publishers/google/models/"
+    candidates = []
     for item in items:
-        if not isinstance(item, dict):
-            raise RuntimeError("invalid_response")
-        name = item.get("name", "")
-        prefix = "publishers/google/models/"
+        name = item.get("name", "") if isinstance(item, dict) else None
         if not isinstance(name, str) or not name.startswith(prefix) or len(name) == len(prefix):
             raise RuntimeError("invalid_response")
         model = name[len(prefix) :]
-        if not re.fullmatch(r"gemini-[a-z0-9.-]+", model):
-            continue
-        models.append(
-            {
-                "model_id": model,
-                "label": model,
-                "upstream_owner_key": "google",
-                "upstream_owner_label": "Google",
-                "capabilities": ["chat", "tools", "structured_output"],
-            }
-        )
+        if is_chat_model(model):
+            candidates.append(model)
+    models = [
+        {
+            "model_id": model,
+            "label": model,
+            "upstream_owner_key": "google",
+            "upstream_owner_label": "Google",
+            "capabilities": ["chat", "tools", "structured_output"],
+        }
+        for model in reachable_models(project, location, candidates, credentials)
+    ]
     next_token = response.get("nextPageToken") or ""
     if not isinstance(next_token, str) or len(next_token) > 4094:
         raise RuntimeError("invalid_response")
     seen = previously_seen or bool(models)
     if not next_token and not seen:
-        raise RuntimeError("invalid_response")
+        # The whole catalog was read and the project can use none of its chat models
+        # in this location.
+        raise RuntimeError("model_unavailable")
     return {
         "models": models,
         "next_cursor": f"{int(seen)}:{next_token}" if next_token else "",
@@ -456,14 +643,11 @@ def chat(request: dict[str, Any], *, structured: bool = False) -> dict[str, Any]
     payload = request.get("input") or {}
     project, location, credentials = connection(request)
     model = payload.get("model_id")
-    if not isinstance(model, str) or not re.fullmatch(r"gemini-[a-z0-9.-]+", model):
+    if not isinstance(model, str) or not _GEMINI_MODEL.fullmatch(model):
         raise RuntimeError("invalid_configuration")
     body = build_generate_request(payload, structured=structured)
-    url = (
-        f"{_endpoint(location)}/v1/projects/{project}/locations/{location}"
-        f"/publishers/google/models/{model}:generateContent"
-    )
-    response = request_json(url, credentials, body=body)
+    url = _model_url(project, location, model, "generateContent")
+    response = request_json(url, credentials, body=body, bad_request="capability_mismatch")
     candidates = response.get("candidates")
     if (
         not isinstance(candidates, list)
@@ -548,6 +732,8 @@ def _failure_response(code: str, *, request_semantics: str) -> dict[str, Any]:
         "invalid_response",
         "invalid_host_envelope",
         "capability_mismatch",
+        "model_unavailable",
+        "billing_quota_exceeded",
         "rate_limited",
         "timeout",
         "upstream_unavailable",
@@ -557,6 +743,8 @@ def _failure_response(code: str, *, request_semantics: str) -> dict[str, Any]:
         "authentication_error",
         "invalid_configuration",
         "invalid_host_envelope",
+        "model_unavailable",
+        "billing_quota_exceeded",
         "rate_limited",
     }
     message = f"Vertex request failed: {safe_code}"

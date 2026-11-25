@@ -117,7 +117,7 @@ def test_chat_translates_usage_and_no_retry(monkeypatch):
         runtime, "connection", lambda request: ("sample-project", "us-central1", object())
     )
 
-    def fake_request(url, credentials, *, body=None):
+    def fake_request(url, credentials, *, body=None, **kwargs):
         calls.append((url, body))
         return {
             "candidates": [{"content": {"parts": [{"text": "hello"}]}, "finishReason": "STOP"}],
@@ -291,7 +291,9 @@ def test_discovery_does_not_replace_catalog_with_no_gemini_models(monkeypatch):
         "request_json",
         lambda *args, **kwargs: {"publisherModels": [{"name": "publishers/google/models/gemma"}]},
     )
-    with pytest.raises(RuntimeError, match="invalid_response"):
+    # The whole catalog has no chat model this project can use: said as such, and the
+    # host keeps the previous model list (a failed refresh replaces nothing).
+    with pytest.raises(RuntimeError, match="model_unavailable"):
         runtime.list_models({"query": {}})
 
 
