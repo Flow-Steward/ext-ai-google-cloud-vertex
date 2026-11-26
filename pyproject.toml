@@ -1,6 +1,6 @@
 [project]
 name = "flowsteward-google-cloud-vertex-llm-provider"
-version = "0.1.9"
+version = "0.1.10"
 requires-python = ">=3.11"
 
 [tool.pytest.ini_options]

@@ -6,3 +6,4 @@
 - Clear reasons when Google refuses: a project without billing or with a Free trial account shows as a billing problem, a model not served in the location as an unavailable model, and a request the model cannot handle as a capability mismatch.
 - A step-by-step setup guide on the provider page: project, billing, API, service account, JSON key, fields, and what each message means.
 - A new README.
+- Update the hash-locked CI test dependency `packaging` to 26.4.
